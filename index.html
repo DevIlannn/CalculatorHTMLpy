@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kalkulator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hind:wght@400&family=Roboto:wght@200;400;500;600&family=Signika:wght@600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: light;
+      --font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --font-xs: 0.7rem;
+      --font-sm: 0.85rem;
+      --font-base: 1rem;
+      --font-lg: 1.025rem;
+      --font-xl: 1.15rem;
+      --weight-regular: 400;
+      --weight-medium: 500;
+      --weight-bold: 600;
+      --space-sm: 8px;
+      --space-md: 12px;
+      --space-lg: 16px;
+      --space-xl: 20px;
+      --radius-sm: 4px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --radius-full: 999px;
+      --font-primary: #F5F5F5;
+      --font-secondary: #BDBDBD;
+      --font-muted: #757575;
+      --bg-primary: #212121;
+      --bg-secondary: #303030;
+      --accent: #666;
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+    }
+
+    body {
+      min-height: 100dvh;
+      display: grid;
+      place-items: center;
+      padding: var(--space-lg);
+      background: var(--bg-primary);
+      color: var(--font-primary);
+      font-family: 'Hind', var(--font-family);
+      font-weight: var(--weight-regular);
+      font-size: var(--font-base);
+    }
+
+    .calculator {
+      width: 100%;
+      max-width: 360px;
+      display: grid;
+      gap: var(--space-lg);
+      padding: var(--space-xl);
+      background: var(--bg-secondary);
+      border-radius: var(--radius-lg);
+    }
+
+    .title {
+      font-family: 'Signika', var(--font-family);
+      font-weight: var(--weight-bold);
+      font-size: var(--font-xl);
+      color: var(--font-primary);
+    }
+
+    .subtitle {
+      font-family: 'Roboto', var(--font-family);
+      font-weight: 200;
+      font-size: var(--font-sm);
+      color: var(--font-secondary);
+    }
+
+    .screen {
+      display: grid;
+      gap: var(--space-sm);
+      padding: var(--space-lg);
+      background: var(--bg-primary);
+      border-radius: var(--radius-md);
+      text-align: right;
+    }
+
+    .expression {
+      min-height: 1.4em;
+      font-family: 'Roboto', var(--font-family);
+      font-weight: 200;
+      font-size: var(--font-base);
+      color: var(--font-secondary);
+      white-space: nowrap;
+      overflow-x: auto;
+    }
+
+    .value {
+      font-family: 'Signika', var(--font-family);
+      font-weight: var(--weight-bold);
+      font-size: clamp(1.75rem, 8vw, 2.25rem);
+      color: var(--font-primary);
+      white-space: nowrap;
+      overflow-x: auto;
+    }
+
+    .status {
+      min-height: 1.2em;
+      font-family: 'Roboto', var(--font-family);
+      font-weight: 200;
+      font-size: var(--font-sm);
+      color: var(--font-secondary);
+      text-align: right;
+    }
+
+    .keys {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: var(--space-md);
+    }
+
+    .key {
+      min-height: 56px;
+      border: 0;
+      border-radius: var(--radius-md);
+      background: var(--bg-primary);
+      color: var(--font-primary);
+      font-family: 'Signika', var(--font-family);
+      font-weight: var(--weight-bold);
+      font-size: var(--font-xl);
+      cursor: pointer;
+      transition: background-color 0.15s ease;
+    }
+
+    .key:hover {
+      background: var(--accent);
+    }
+
+    .key:focus-visible {
+      outline: 2px solid var(--font-primary);
+      outline-offset: 2px;
+    }
+
+    .key:disabled {
+      color: var(--font-muted);
+      cursor: not-allowed;
+    }
+
+    .key--operator {
+      background: var(--accent);
+    }
+
+    .key--operator:hover {
+      background: var(--font-muted);
+    }
+
+    .key--equals {
+      grid-column: 4;
+      grid-row: 4 / span 2;
+      background: var(--font-primary);
+      color: var(--bg-primary);
+    }
+
+    .key--equals:hover {
+      background: var(--font-secondary);
+    }
+
+    .key--wide {
+      grid-column: span 2;
+    }
+
+    @media (max-width: 380px) {
+      .calculator {
+        padding: var(--space-lg);
+      }
+
+      .key {
+        min-height: 52px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .key {
+        transition: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="calculator">
+    <header>
+      <h1 class="title">Kalkulator</h1>
+      <p class="subtitle">Perhitungan diproses di server Python</p>
+    </header>
+
+    <section class="screen" aria-label="Layar kalkulator">
+      <div class="expression" id="expression" aria-hidden="true"></div>
+      <output class="value" id="value" aria-live="polite">0</output>
+    </section>
+
+    <p class="status" id="status" role="status"></p>
+
+    <div class="keys" id="keys">
+      <button class="key" type="button" data-action="clear" aria-label="Hapus semua">C</button>
+      <button class="key" type="button" data-action="delete" aria-label="Hapus satu digit">DEL</button>
+      <button class="key key--operator" type="button" data-action="operator" data-value="/" aria-label="Bagi">÷</button>
+      <button class="key key--operator" type="button" data-action="operator" data-value="*" aria-label="Kali">×</button>
+
+      <button class="key" type="button" data-action="digit" data-value="7">7</button>
+      <button class="key" type="button" data-action="digit" data-value="8">8</button>
+      <button class="key" type="button" data-action="digit" data-value="9">9</button>
+      <button class="key key--operator" type="button" data-action="operator" data-value="-" aria-label="Kurang">−</button>
+
+      <button class="key" type="button" data-action="digit" data-value="4">4</button>
+      <button class="key" type="button" data-action="digit" data-value="5">5</button>
+      <button class="key" type="button" data-action="digit" data-value="6">6</button>
+      <button class="key key--operator" type="button" data-action="operator" data-value="+" aria-label="Tambah">+</button>
+
+      <button class="key" type="button" data-action="digit" data-value="1">1</button>
+      <button class="key" type="button" data-action="digit" data-value="2">2</button>
+      <button class="key" type="button" data-action="digit" data-value="3">3</button>
+      <button class="key key--equals" type="button" data-action="equals" aria-label="Sama dengan">=</button>
+
+      <button class="key key--wide" type="button" data-action="digit" data-value="0">0</button>
+      <button class="key" type="button" data-action="dot" aria-label="Desimal">.</button>
+    </div>
+  </main>
+
+  <script type="module">
+    const API_URL = '/api/hitung';
+    const MAX_DIGITS = 15;
+    const OPERATOR_SYMBOLS = { '+': '+', '-': '−', '*': '×', '/': '÷' };
+    const DIGIT_PATTERN = /^[0-9]$/;
+
+    const expressionElement = document.getElementById('expression');
+    const valueElement = document.getElementById('value');
+    const statusElement = document.getElementById('status');
+    const keysElement = document.getElementById('keys');
+
+    const state = {
+      current: '0',
+      previous: null,
+      operator: null,
+      awaitingOperand: false,
+      fresh: false,
+      lastExpression: '',
+      busy: false
+    };
+
+    const render = () => {
+      const pendingExpression = state.operator
+        ? `${state.previous} ${OPERATOR_SYMBOLS[state.operator]}`
+        : state.lastExpression;
+      expressionElement.textContent = pendingExpression;
+      valueElement.textContent = state.current;
+      keysElement.querySelectorAll('.key').forEach((key) => {
+        key.disabled = state.busy;
+      });
+    };
+
+    const setStatus = (message) => {
+      statusElement.textContent = message;
+    };
+
+    const countDigits = (text) => text.replace(/[-.]/g, '').length;
+
+    const resetEntry = () => {
+      state.current = '0';
+      state.fresh = false;
+      state.awaitingOperand = false;
+      state.lastExpression = '';
+    };
+
+    const inputDigit = (digit) => {
+      if (state.fresh) {
+        resetEntry();
+      }
+      if (state.awaitingOperand) {
+        state.current = digit;
+        state.awaitingOperand = false;
+      } else if (state.current === '0') {
+        state.current = digit;
+      } else if (countDigits(state.current) < MAX_DIGITS) {
+        state.current += digit;
+      }
+      setStatus('');
+      render();
+    };
+
+    const inputDot = () => {
+      if (state.fresh) {
+        resetEntry();
+      }
+      if (state.awaitingOperand) {
+        state.current = '0.';
+        state.awaitingOperand = false;
+      } else if (!state.current.includes('.')) {
+        state.current += '.';
+      }
+      setStatus('');
+      render();
+    };
+
+    const deleteLast = () => {
+      if (state.fresh || state.awaitingOperand) {
+        return;
+      }
+      const shortened = state.current.slice(0, -1);
+      state.current = shortened === '' || shortened === '-' ? '0' : shortened;
+      setStatus('');
+      render();
+    };
+
+    const clearAll = () => {
+      state.current = '0';
+      state.previous = null;
+      state.operator = null;
+      state.awaitingOperand = false;
+      state.fresh = false;
+      state.lastExpression = '';
+      setStatus('');
+      render();
+    };
+
+    const requestResult = async (a, operator, b) => {
+      let response;
+      try {
+        response = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ a, operator, b })
+        });
+      } catch {
+        throw new Error('Gagal terhubung ke server');
+      }
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data.error || 'Terjadi kesalahan pada server');
+      }
+      return data.result;
+    };
+
+    const evaluate = async () => {
+      if (!state.operator || state.awaitingOperand || state.busy) {
+        return false;
+      }
+      state.busy = true;
+      setStatus('');
+      render();
+      try {
+        const expression = `${state.previous} ${OPERATOR_SYMBOLS[state.operator]} ${state.current} =`;
+        const result = await requestResult(state.previous, state.operator, state.current);
+        state.current = result;
+        state.previous = null;
+        state.operator = null;
+        state.awaitingOperand = false;
+        state.fresh = true;
+        state.lastExpression = expression;
+        return true;
+      } catch (error) {
+        setStatus(error.message);
+        return false;
+      } finally {
+        state.busy = false;
+        render();
+      }
+    };
+
+    const chooseOperator = async (operator) => {
+      if (state.busy) {
+        return;
+      }
+      if (state.operator && !state.awaitingOperand) {
+        const succeeded = await evaluate();
+        if (!succeeded) {
+          return;
+        }
+      }
+      state.previous = state.current;
+      state.operator = operator;
+      state.awaitingOperand = true;
+      state.fresh = false;
+      state.lastExpression = '';
+      render();
+    };
+
+    const actions = {
+      digit: (value) => inputDigit(value),
+      dot: () => inputDot(),
+      operator: (value) => chooseOperator(value),
+      equals: () => evaluate(),
+      delete: () => deleteLast(),
+      clear: () => clearAll()
+    };
+
+    keysElement.addEventListener('click', (event) => {
+      const key = event.target.closest('.key');
+      if (!key) {
+        return;
+      }
+      actions[key.dataset.action](key.dataset.value);
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.ctrlKey || event.metaKey || event.altKey) {
+        return;
+      }
+      const { key } = event;
+      if (DIGIT_PATTERN.test(key)) {
+        actions.digit(key);
+      } else if (key === '.' || key === ',') {
+        actions.dot();
+      } else if (OPERATOR_SYMBOLS[key]) {
+        event.preventDefault();
+        actions.operator(key);
+      } else if (key === 'Enter' || key === '=') {
+        event.preventDefault();
+        actions.equals();
+      } else if (key === 'Backspace') {
+        actions.delete();
+      } else if (key === 'Escape' || key.toLowerCase() === 'c') {
+        actions.clear();
+      }
+    });
+
+    render();
+  </script>
+</body>
+</html>
